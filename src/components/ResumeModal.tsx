@@ -8,9 +8,38 @@ interface ResumeModalProps {
 }
 
 const ResumeModal = ({ isOpen, onClose }: ResumeModalProps) => {
-  const handleDownload = () => {
-    // Open the resume PDF in a new tab (download attribute may not work for all browsers)
-    window.open('/resume.pdf', '_blank');
+  const handleDownload = async () => {
+    try {
+      // For GitHub Pages, we need to use the full path
+      const baseUrl = window.location.hostname === 'localhost' 
+        ? '' 
+        : '/PORTFOLIO';
+      
+      const response = await fetch(`${baseUrl}/resume.pdf`);
+      if (!response.ok) throw new Error('Failed to fetch resume');
+      
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      
+      link.href = url;
+      link.download = 'Jeevanandam_Resume.pdf';
+      link.style.display = 'none';
+      
+      document.body.appendChild(link);
+      link.click();
+      
+      // Clean up
+      setTimeout(() => {
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(link);
+      }, 100);
+      
+    } catch (error) {
+      console.error('Error downloading resume:', error);
+      // Fallback: Open in new tab if download fails
+      window.open('/resume.pdf', '_blank');
+    }
   };
 
   return (
